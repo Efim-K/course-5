@@ -8,15 +8,15 @@ class HeadHunterAPI:
     Класс для работы с API HeadHunter и получения данных по компаниям и вакансиям
     """
 
-    def __init__(self, list_pk: list) -> None:
-        self.__list_pk = list_pk
+    def __init__(self, list_id: list) -> None:
+        self.__list_id = list_id
 
     def __get_employer(self, pk: int) -> dict:
         """
         Получение названия компании
         """
         url = f'https://api.hh.ru/employers/{pk}/'
-        params = {'per_page': 10, "sort_by": "by_vacancies_open", 'area': 4}
+        params = {'per_page': 10, 'sort_by': 'by_vacancies_open'}
         response = requests.get(url, params=params)
         is_allowed = self.__check_status(response)
         if not is_allowed:
@@ -27,17 +27,17 @@ class HeadHunterAPI:
         except JSONDecodeError:
             raise HeadHunterAPIException(f'Ошибка получения данных JSON: {response.text}')
         return {
-            'id': employer['id'],
-            'name': employer['name'],
-            'url': employer['alternate_url']
+            'employer_id': employer['id'],
+            'employer_name': employer['name'],
+            'alternate_url': employer['alternate_url']
         }
 
-    def __load_vacancies(self, pk: int) -> list[dict]:
+    def __load_vacancies(self, pk: str) -> list[dict]:
         """
         Получение списка вакансий в формате json по id компании
         """
         url = 'https://api.hh.ru/vacancies/'
-        params = {'per_page': 10, "employer_id": pk, 'area': 4}
+        params = {'per_page': 20, 'employer_id': pk}
         response = requests.get(url, params=params)
         is_allowed = self.__check_status(response)
         if not is_allowed:
@@ -61,7 +61,7 @@ class HeadHunterAPI:
         Получаем список компаний
         """
         employers_list = []
-        for pk in self.__list_pk:
+        for pk in self.__list_id:
             employers_list.append(self.__get_employer(pk))
         return employers_list
 
@@ -72,5 +72,5 @@ class HeadHunterAPI:
         employers_list = self.get_employers_list()
         vacancies_list = []
         for employer in employers_list:
-            vacancies_list.extend(self.__load_vacancies(employer["id"]))
+            vacancies_list.extend(self.__load_vacancies(employer['employer_id']))
         return vacancies_list
