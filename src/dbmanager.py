@@ -33,7 +33,8 @@ class DB_Manager:
         with psycopg2.connect(dbname=self.__db_name, **self.__params) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                            SELECT vacancy_name, employer_name, salary_from, salary_to, currency, vacancy_url 
+                            SELECT vacancy_name, employer_name, requirement, 
+                            salary_from, salary_to, currency, vacancy_url 
                             FROM vacancies
                             JOIN employers USING(employer_id)
                             """)
