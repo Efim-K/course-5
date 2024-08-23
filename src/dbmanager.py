@@ -19,11 +19,16 @@ class DB_Manager:
         with psycopg2.connect(dbname=self.__db_name, **self.__params) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                            SELECT employer_name, COUNT(*) FROM employers
+                            SELECT employer_name AS "Компания", COUNT(*) AS "Кол-во вакансий" FROM employers
                             JOIN vacancies USING(employer_id)
                             GROUP BY employer_name
                             """)
-                print(cur.fetchall())
+                rows = cur.fetchall()
+                # в первом элементе хранится имя колонки
+                column_names = [d[0] for d in cur.description]
+                for row in rows:
+                    row_dict = {column_names[index]: value for (index, value) in enumerate(row)}
+                    print(row_dict)
         conn.close()
 
     def get_all_vacancies(self):
@@ -33,11 +38,18 @@ class DB_Manager:
         with psycopg2.connect(dbname=self.__db_name, **self.__params) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                            SELECT vacancy_name, employer_name, salary_from, salary_to, currency, vacancy_url 
+                            SELECT vacancy_name AS "Вакансия", employer_name AS "Компания",
+                            salary_from AS "Зарплата от", salary_to AS "Зарплата до", currency AS "Валюта",
+                            vacancy_url AS "Ссылка" 
                             FROM vacancies
                             JOIN employers USING(employer_id)
                             """)
-                print(cur.fetchall())
+                rows = cur.fetchall()
+                # в первом элементе хранится имя колонки
+                column_names = [d[0] for d in cur.description]
+                for row in rows:
+                    row_dict = {column_names[index]: value for (index, value) in enumerate(row)}
+                    print(row_dict)
         conn.close()
 
     def get_avg_salary(self):
@@ -47,10 +59,16 @@ class DB_Manager:
         with psycopg2.connect(dbname=self.__db_name, **self.__params) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT ROUND(AVG((salary_from + salary_to) / 2)) AS avg_salary
+                    SELECT ROUND(AVG((salary_from + salary_to) / 2)) AS "Средняя зарплата"
                     FROM vacancies
                 """)
-                print(cur.fetchall()[0])
+
+                rows = cur.fetchall()
+                # в первом элементе хранится имя колонки
+                column_names = [d[0] for d in cur.description]
+                for row in rows:
+                    row_dict = {column_names[index]: value for (index, value) in enumerate(row)}
+                    print(row_dict)
         conn.close()
 
     def get_vacancies_with_higher_salary(self):
@@ -60,11 +78,16 @@ class DB_Manager:
         with psycopg2.connect(dbname=self.__db_name, **self.__params) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT * FROM vacancies
+                    SELECT * FROM vacancies AS "Вакансия"
                     WHERE (salary_to + salary_from) > 
                     (SELECT AVG(salary_from + salary_to) FROM vacancies);
                 """)
-                print(cur.fetchall())
+                rows = cur.fetchall()
+                # в первом элементе хранится имя колонки
+                column_names = [d[0] for d in cur.description]
+                for row in rows:
+                    row_dict = {column_names[index]: value for (index, value) in enumerate(row)}
+                    print(row_dict)
         conn.close()
 
     def get_vacancies_with_keyword(self, keyword):
@@ -74,8 +97,13 @@ class DB_Manager:
         with psycopg2.connect(dbname=self.__db_name, **self.__params) as conn:
             with conn.cursor() as cur:
                 cur.execute(f"""
-                        SELECT * FROM vacancies
+                        SELECT * FROM vacancies  AS "Вакансия"
                         WHERE vacancy_name LIKE '%{keyword}%'
                         """)
-                print(cur.fetchall())
+                rows = cur.fetchall()
+                # в первом элементе хранится имя колонки
+                column_names = [d[0] for d in cur.description]
+                for row in rows:
+                    row_dict = {column_names[index]: value for (index, value) in enumerate(row)}
+                    print(row_dict)
         conn.close()

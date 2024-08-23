@@ -17,11 +17,11 @@ def create_database(database_name: str, params: dict) -> None:
 
     with psycopg2.connect(dbname=database_name, **params) as conn:
         with conn.cursor() as cur:
-            cur.execute('''
+            cur.execute(''' 
             CREATE TABLE employers (
                 employer_id SERIAL PRIMARY KEY,
                 employer_name VARCHAR(255) NOT NULL,
-                company_url text,
+                employer_url text
                 );
             ''')
     conn.commit()
@@ -60,34 +60,34 @@ def save_data_in_database(database_name: str, employers: list[dict], vacancies: 
             for employer in employers:
                 employer_id = employer['employer_id']
                 employer_name = employer['employer_name']
-                employer_url = employer['employer_url']
+                employer_url = employer.get('alternate_url', 'Нет информации')
                 cur.execute("""
-                    INSERT INTO companies (employer_id, employer_name, employer_url)
+                    INSERT INTO employers (employer_id, employer_name, employer_url)
                     VALUES (%s, %s, %s)
                 """, (employer_id, employer_name, employer_url))
 
-                for vacancy in vacancies:
-                    currency = 'Нет информации'
-                    salary_from = 0
-                    salary_to = 0
-                    if vacancy.get('salary'):
-                        if vacancy.get('salary').get('currency'):
-                            currency = vacancy.get('salary').get('currency')
-                        if vacancy.get('salary').get('from'):
-                            salary_from = vacancy.get('salary').get('from')
-                        if vacancy.get('salary').get('to'):
-                            salary_to = vacancy.get('salary').get('to')
+            for vacancy in vacancies:
+                currency = 'Нет информации'
+                salary_from = 0
+                salary_to = 0
+                if vacancy.get('salary'):
+                    if vacancy.get('salary').get('currency'):
+                        currency = vacancy.get('salary').get('currency')
+                    if vacancy.get('salary').get('from'):
+                        salary_from = vacancy.get('salary').get('from')
+                    if vacancy.get('salary').get('to'):
+                        salary_to = vacancy.get('salary').get('to')
 
-                    vacancy_id = vacancy['id']
-                    employer_id = vacancy['employer']['id']
-                    vacancy_name = vacancy['name']
-                    requirement = vacancy['snippet'].get('requirement', 'Нет информации')
-                    vacancy_url = vacancy['alternate_url']
-                    cur.execute("""
-                        INSERT INTO vacancies (vacancy_id, employer_id, vacancy_name, requirement,
-                        salary_from, salary_to, currency, vacancy_url)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (vacancy_id, employer_id, vacancy_name, requirement, salary_from,
-                          salary_to, currency, vacancy_url))
+                vacancy_id = vacancy['id']
+                employer_id = vacancy['employer']['id']
+                vacancy_name = vacancy['name']
+                requirement = vacancy['snippet'].get('requirement', 'Нет информации')
+                vacancy_url = vacancy.get('alternate_url')
+                cur.execute("""
+                    INSERT INTO vacancies (vacancy_id, employer_id, vacancy_name, requirement,
+                    salary_from, salary_to, currency, vacancy_url)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (vacancy_id, employer_id, vacancy_name, requirement, salary_from,
+                      salary_to, currency, vacancy_url))
     conn.commit()
     conn.close()
