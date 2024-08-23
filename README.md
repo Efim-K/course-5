@@ -12,7 +12,7 @@
 
 Клонирование проекта:
 ```
-git clone https://github.com/Efim-K/Course-4.git
+git clone git@github.com:Efim-K/course-5.git
 ```
 
 Для запуска проекта необходимо создать виртуальное окружение venv:
