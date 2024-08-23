@@ -15,43 +15,51 @@ class HeadHunterAPI:
         """
         Получение названия компании
         """
-        url = f'https://api.hh.ru/employers/{pk}/'
-        params = {'per_page': 10, 'sort_by': 'by_vacancies_open'}
+        url = f"https://api.hh.ru/employers/{pk}/"
+        params = {"per_page": 10, "sort_by": "by_vacancies_open"}
         response = requests.get(url, params=params)
         is_allowed = self.__check_status(response)
         if not is_allowed:
-            raise HeadHunterAPIException(f'Ошибка заброса данных:{response.status_code}, {response.text} ')
+            raise HeadHunterAPIException(
+                f"Ошибка заброса данных:{response.status_code}, {response.text} "
+            )
         try:
             response = requests.get(url, params=params)
             employer = response.json()
         except JSONDecodeError:
-            raise HeadHunterAPIException(f'Ошибка получения данных JSON: {response.text}')
+            raise HeadHunterAPIException(
+                f"Ошибка получения данных JSON: {response.text}"
+            )
         return {
-            'employer_id': employer['id'],
-            'employer_name': employer['name'],
-            'alternate_url': employer['alternate_url']
+            "employer_id": employer["id"],
+            "employer_name": employer["name"],
+            "alternate_url": employer["alternate_url"],
         }
 
     def __load_vacancies(self, pk: str) -> list[dict]:
         """
         Получение списка вакансий в формате json по id компании
         """
-        url = 'https://api.hh.ru/vacancies/'
-        params = {'per_page': 20, 'employer_id': pk}
+        url = "https://api.hh.ru/vacancies/"
+        params = {"per_page": 20, "employer_id": pk}
         response = requests.get(url, params=params)
         is_allowed = self.__check_status(response)
         if not is_allowed:
-            raise HeadHunterAPIException(f'Ошибка заброса данных:{response.status_code}, {response.text} ')
+            raise HeadHunterAPIException(
+                f"Ошибка заброса данных:{response.status_code}, {response.text} "
+            )
         try:
             response = requests.get(url, params=params)
-            vacancies = response.json()['items']
+            vacancies = response.json()["items"]
         except JSONDecodeError:
-            raise HeadHunterAPIException(f'Ошибка получения данных JSON: {response.text}')
+            raise HeadHunterAPIException(
+                f"Ошибка получения данных JSON: {response.text}"
+            )
         return vacancies
 
     @staticmethod
     def __check_status(response) -> bool:
-        """"
+        """ "
         Проверка статуса запроса url
         """
         return response.status_code == 200
@@ -72,5 +80,5 @@ class HeadHunterAPI:
         employers_list = self.get_employers_list()
         vacancies_list = []
         for employer in employers_list:
-            vacancies_list.extend(self.__load_vacancies(employer['employer_id']))
+            vacancies_list.extend(self.__load_vacancies(employer["employer_id"]))
         return vacancies_list
